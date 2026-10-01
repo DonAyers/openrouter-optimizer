@@ -1,0 +1,25 @@
+{
+  "name": "slaygent",
+  "version": "1.0.0",
+  "description": "OpenRouter router recommendation tool - an MCP server for optimal model routing",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "slaygent": "index.ts",
+    "slaygent-mcp": "src/mcp-server.ts"
+  },
+  "scripts": {
+    "start": "bun run index.ts",
+    "mcp": "bun run src/mcp-server.ts",
+    "test": "bun run index.ts --task \"Fix the bug in this React component\" --budget 0.001"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.2.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^7"
+  }
+}
+}

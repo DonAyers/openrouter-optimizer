@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Cache
+model-cache.json
+decisions-log.jsonl
+
+# Build output
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+test-output/
