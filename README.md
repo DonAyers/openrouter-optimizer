@@ -12,16 +12,43 @@ Analyzes your task and recommends:
 
 ## Quick Start
 
-### Install
+### Install (choose one)
 
+**Option 1: npx (no install, works immediately)**
 ```bash
-# Clone the repo
+npx -y github:DonAyers/openrouter-optimizer setup
+```
+
+**Option 2: npm install (global)**
+```bash
+npm install -g openrouter-optimizer
+openrouter-optimizer setup
+```
+
+**Option 3: Clone (for development)**
+```bash
 git clone https://github.com/DonAyers/openrouter-optimizer
 cd openrouter-optimizer
-
-# Install dependencies
 bun install
 ```
+
+### Setup
+
+The easiest way to configure for your AI harnesses:
+
+```bash
+openrouter-optimizer setup
+```
+
+Or if you cloned:
+```bash
+bun run setup.ts
+```
+
+The setup command will:
+1. Detect installed AI harnesses (Claude Code, OpenCode, Cursor, etc.)
+2. Ask which to configure (or configure all detected by default)
+3. Write the MCP config to the correct locations
 
 ### Setup (Recommended)
 

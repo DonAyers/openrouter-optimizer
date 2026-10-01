@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+#!/usr/bin/env bun
 /**
  * OpenRouter Optimizer - Setup CLI
  * 

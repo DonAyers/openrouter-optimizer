@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { getModels } from './model-cache';
 import { classifyTask, getTaskTypeDescription } from './classifier';
 import { recommendRouter, generateCurlExample } from './router-recommender';

@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
