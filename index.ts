@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { resolve } from 'path';
 import { getModels } from './model-cache';
 import { classifyTask, getTaskTypeDescription } from './classifier';
 import { recommendRouter, generateCurlExample } from './router-recommender';
@@ -161,6 +162,16 @@ function buildContext(args: ParsedArgs): TaskContext | undefined {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
+
+  // If first arg is "setup", delegate to setup.ts
+  if (process.argv[2] === 'setup') {
+    const { spawn } = await import('child_process');
+    const setup = spawn('bun', ['run', resolve(__dirname, 'setup.ts')], {
+      stdio: 'inherit',
+    });
+    await new Promise((resolve) => setup.on('close', resolve));
+    return;
+  }
 
   // Show help
   if (args.help || !args.task) {
