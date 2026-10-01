@@ -166,7 +166,8 @@ async function main(): Promise<void> {
   // If first arg is "setup", delegate to setup.ts
   if (process.argv[2] === 'setup') {
     const { spawn } = await import('child_process');
-    const setup = spawn('bun', ['run', resolve(__dirname, 'setup.ts')], {
+    const setupArgs = process.argv.slice(2);
+    const setup = spawn('bun', ['run', resolve(__dirname, 'setup.ts'), ...setupArgs], {
       stdio: 'inherit',
     });
     await new Promise((resolve) => setup.on('close', resolve));
@@ -174,18 +175,22 @@ async function main(): Promise<void> {
   }
 
   // Show help
-  if (args.help || !args.task) {
+  if (args.help) {
     console.log(formatUsageGuide());
-    if (!args.task) {
-      console.error('\nError: --task is required');
-      console.error('Run with --help for usage information');
-      process.exit(1);
-    }
-    return;
+    process.exit(0);
   }
 
-  console.log('Analyzing task and recommending optimal OpenRouter router...');
-  console.log('');
+  if (!args.task) {
+    console.log(formatUsageGuide());
+    console.error('\nError: --task is required');
+    console.error('Run with --help for usage information');
+    process.exit(1);
+  }
+
+  if (!args.json) {
+    console.log('Analyzing task and recommending optimal OpenRouter router...');
+    console.log('');
+  }
 
   try {
     // Get models (with caching)
@@ -194,12 +199,14 @@ async function main(): Promise<void> {
     // Classify task (with optional context)
     const context = buildContext(args);
     const classification = classifyTask(args.task, {}, context);
-    console.log(`Task classified as: ${classification.type} (${(classification.confidence * 100).toFixed(0)}% confidence)`);
-    console.log(`Complexity: ${classification.complexity}`);
-    if (classification.keywords.length > 0) {
-      console.log(`Signals: ${classification.keywords.join(', ')}`);
+    if (!args.json) {
+      console.log(`Task classified as: ${classification.type} (${(classification.confidence * 100).toFixed(0)}% confidence)`);
+      console.log(`Complexity: ${classification.complexity}`);
+      if (classification.keywords.length > 0) {
+        console.log(`Signals: ${classification.keywords.join(', ')}`);
+      }
+      console.log('');
     }
-    console.log('');
 
     // Build request and constraints
     const request = buildRequest(args);
