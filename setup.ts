@@ -1,14 +1,15 @@
 #!/usr/bin/env bun
-#!/usr/bin/env bun
 /**
  * OpenRouter Optimizer - Setup CLI
  * 
  * Detects installed AI harnesses and configures MCP server integration.
  * 
  * Usage:
- *   bun run setup.ts              # Interactive setup
+ *   bun run setup.ts              # Interactive setup (user-level by default)
+ *   bun run setup.ts --project    # Project-level config only
  *   bun run setup.ts --detect    # Detect only, no config
- *   bun run setup.ts --add <harness>  # Add specific harness
+ *   bun run setup.ts --add <harness>  # Add specific harness (user-level)
+ *   bun run setup.ts --add <harness> --project  # Add specific harness (project-level)
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
@@ -20,11 +21,13 @@ import { homedir } from 'os';
 interface HarnessConfig {
   name: string;
   displayName: string;
-  configPath: string;
+  configPath: string;           // User-level config path
+  projectConfigPath: string;    // Project-level config path (optional)
   configKey: string;
   command: string;
   args: string[];
   detected: boolean;
+  supportsProjectLevel: boolean; // Whether this harness supports project-level config
 }
 
 const MCP_SERVER_PATH = resolve(__dirname, 'src/mcp-server.ts');
@@ -35,46 +38,56 @@ const HARNESSES: HarnessConfig[] = [
     name: 'opencode',
     displayName: 'OpenCode',
     configPath: join(homedir(), '.config', 'opencode', 'settings.json'),
+    projectConfigPath: join(process.cwd(), '.opencode', 'settings.json'),
     configKey: 'mcpServers',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
     detected: false,
+    supportsProjectLevel: false, // OpenCode may not support project-level MCP
   },
   {
     name: 'claude',
     displayName: 'Claude Code',
     configPath: join(homedir(), '.claude', 'settings.json'),
+    projectConfigPath: join(process.cwd(), '.claude', 'settings.json'),
     configKey: 'mcpServers',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
     detected: false,
+    supportsProjectLevel: true, // Claude Code supports project-level config
   },
   {
     name: 'claude-desktop',
     displayName: 'Claude Desktop',
     configPath: join(homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
+    projectConfigPath: '',
     configKey: 'mcpServers',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
     detected: false,
+    supportsProjectLevel: false, // Claude Desktop is user-level only
   },
   {
     name: 'vscode-copilot',
     displayName: 'GitHub Copilot (VS Code)',
     configPath: join(homedir(), '.config', 'Code', 'User', 'globalStorage', 'github.copilot', 'storage.json'),
+    projectConfigPath: join(process.cwd(), '.vscode', 'settings.json'),
     configKey: 'mcp',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
     detected: false,
+    supportsProjectLevel: true, // VS Code supports workspace settings
   },
   {
     name: 'cursor',
     displayName: 'Cursor',
     configPath: join(homedir(), '.cursor', 'mcp.json'),
+    projectConfigPath: join(process.cwd(), '.cursor', 'mcp.json'),
     configKey: 'mcpServers',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
     detected: false,
+    supportsProjectLevel: true, // Cursor supports project-level config
   },
 ];
 
@@ -161,21 +174,28 @@ function addMcpServer(config: Record<string, unknown>, harness: HarnessConfig): 
   return config;
 }
 
-function configureHarness(harness: HarnessConfig): boolean {
-  const config = readConfigFile(harness.configPath) || {};
+function configureHarness(harness: HarnessConfig, projectMode = false): boolean {
+  const configPath = projectMode && harness.supportsProjectLevel ? harness.projectConfigPath : harness.configPath;
+  
+  if (projectMode && !harness.supportsProjectLevel) {
+    console.log(`  ✗ ${harness.displayName}: does not support project-level config`);
+    return false;
+  }
+  
+  const config = readConfigFile(configPath) || {};
   
   // Check if already configured
   const existing = config[harness.configKey] as Record<string, unknown> | undefined;
   if (existing && (existing as Record<string, unknown>)['openrouter-optimizer']) {
-    console.log(`  Already configured for ${harness.displayName}`);
+    console.log(`  Already configured for ${harness.displayName}${projectMode ? ' (project)' : ''}`);
     return true;
   }
 
   // Add the MCP server
   const newConfig = addMcpServer(config, harness);
-  writeConfigFile(harness.configPath, newConfig);
+  writeConfigFile(configPath, newConfig);
   
-  console.log(`  Configured for ${harness.displayName}`);
+  console.log(`  ✓ Configured for ${harness.displayName}${projectMode ? ' (project)' : ''}`);
   return true;
 }
 
@@ -186,40 +206,66 @@ function printUsage(): void {
 openrouter-optimizer setup - Configure MCP server for AI harnesses
 
 USAGE:
-  bun run setup.ts              Interactive setup (detect + prompt)
-  bun run setup.ts --detect     Detect installed harnesses only
-  bun run setup.ts --add <name>  Configure specific harness
-  bun run setup.ts --list       List all supported harnesses
+  bun run setup.ts              Interactive setup (user-level by default)
+  bun run setup.ts --project     Interactive setup (project-level only)
+  bun run setup.ts --detect      Detect installed harnesses only
+  bun run setup.ts --add <name>  Configure specific harness (user-level)
+  bun run setup.ts --add <name> --project  Configure specific harness (project-level)
+  bun run setup.ts --list        List all supported harnesses
+
+FLAGS:
+  --project    Use project-level config instead of user-level
+              (only works for harnesses that support it: claude, vscode-copilot, cursor)
 
 HARNSES:
-  ${HARNESSES.map(h => `  ${h.name.padEnd(20)} ${h.displayName}`).join('\n')}
+  ${HARNESSES.map(h => `  ${h.name.padEnd(20)} ${h.displayName}${h.supportsProjectLevel ? ' [project-level]' : ''}`).join('\n')}
 
 EXAMPLES:
-  bun run setup.ts                    # Interactive setup
-  bun run setup.ts --detect          # See what's detected
-  bun run setup.ts --add claude      # Configure Claude Code only
+  bun run setup.ts                    # User-level interactive setup
+  bun run setup.ts --project          # Project-level interactive setup
+  bun run setup.ts --add claude       # User-level: configure Claude Code
+  bun run setup.ts --add claude --project  # Project-level: configure Claude Code
 `);
 }
 
-function interactiveSetup(): void {
+function interactiveSetup(projectMode = false): void {
   console.log('OpenRouter Optimizer Setup');
   console.log('═'.repeat(50));
   console.log('');
-  console.log('This will configure the MCP server for your AI harnesses.');
+  console.log(`Mode: ${projectMode ? 'Project-level' : 'User-level'}`);
   console.log('The server recommends optimal OpenRouter routers for your tasks.');
   console.log('');
 
   detectAllHarnesses();
 
-  const detected = HARNESSES.filter(h => h.detected);
+  // Filter to harnesses that support the selected mode
+  const eligible = HARNESSES.filter(h => 
+    h.detected && 
+    (projectMode ? h.supportsProjectLevel : !h.supportsProjectLevel || h.supportsProjectLevel)
+  );
+  
   const notDetected = HARNESSES.filter(h => !h.detected);
 
-  if (detected.length === 0) {
-    console.log('No harnesses detected. You can still manually configure.');
+  if (eligible.length === 0) {
+    if (projectMode) {
+      console.log('No harnesses detected that support project-level config.');
+      console.log('');
+      console.log('Harnesses supporting project-level config:');
+      const supportsProject = HARNESSES.filter(h => h.supportsProjectLevel);
+      for (const h of supportsProject) {
+        console.log(`  ${h.displayName}: ${h.projectConfigPath}`);
+      }
+    } else {
+      console.log('No harnesses detected. You can still manually configure.');
+    }
     console.log('');
     console.log('Config locations:');
     for (const h of HARNESSES) {
-      console.log(`  ${h.displayName}: ${h.configPath}`);
+      console.log(`  ${h.displayName}:`);
+      console.log(`    User: ${h.configPath}`);
+      if (h.supportsProjectLevel) {
+        console.log(`    Project: ${h.projectConfigPath}`);
+      }
     }
     console.log('');
     console.log('To manually add, create the config file with:');
@@ -228,8 +274,8 @@ function interactiveSetup(): void {
   }
 
   console.log('Detected harnesses:');
-  for (const h of detected) {
-    console.log(`  ✓ ${h.displayName}`);
+  for (const h of eligible) {
+    console.log(`  ✓ ${h.displayName}${projectMode ? ' (project-level)' : ''}`);
   }
   console.log('');
 
@@ -242,11 +288,10 @@ function interactiveSetup(): void {
   }
 
   console.log('Configure which harnesses? (comma-separated names, or "all")');
-  console.log(`Default: ${detected.map(h => h.name).join(', ') || 'none'}`);
+  console.log(`Default: ${eligible.map(h => h.name).join(', ') || 'none'}`);
   
-  // In a real interactive setup, we'd prompt here.
-  // For now, default to configuring all detected.
-  const toConfigure = detected.map(h => h.name);
+  // For now, default to configuring all eligible
+  const toConfigure = eligible.map(h => h.name);
 
   console.log('');
   console.log(`Configuring: ${toConfigure.join(', ')}...`);
@@ -254,6 +299,7 @@ function interactiveSetup(): void {
 
   let success = 0;
   let failed = 0;
+  let skipped = 0;
 
   for (const name of toConfigure) {
     const harness = HARNESSES.find(h => h.name === name);
@@ -264,8 +310,11 @@ function interactiveSetup(): void {
     }
 
     try {
-      configureHarness(harness);
-      success++;
+      if (configureHarness(harness, projectMode)) {
+        success++;
+      } else {
+        skipped++;
+      }
     } catch (e) {
       console.log(`  Failed to configure ${harness.displayName}: ${e}`);
       failed++;
@@ -273,9 +322,20 @@ function interactiveSetup(): void {
   }
 
   console.log('');
-  console.log(`Done! ${success} configured, ${failed} failed.`);
+  console.log(`Done! ${success} configured, ${skipped} skipped (no project support), ${failed} failed.`);
   console.log('');
-  console.log('Restart your AI harnesses to load the MCP server.');
+  if (projectMode) {
+    console.log('Project-level MCP config created. This only affects this project.');
+    console.log(`Config file: ${process.cwd()}/${getProjectConfigFilename(eligible[0]?.projectConfigPath || '')}`);
+  } else {
+    console.log('Restart your AI harnesses to load the MCP server.');
+  }
+}
+
+function getProjectConfigFilename(path: string): string {
+  // Extract just the filename from the full path
+  const parts = path.split('/');
+  return parts[parts.length - 1] || path;
 }
 
 // Parse args
@@ -319,11 +379,20 @@ if (args.includes('--add')) {
     process.exit(1);
   }
 
-  console.log(`Configuring ${harness.displayName}...`);
-  configureHarness(harness);
+  const projectMode = args.includes('--project');
+  
+  if (projectMode && !harness.supportsProjectLevel) {
+    console.error(`Error: ${harness.displayName} does not support project-level config`);
+    console.log('Use without --project for user-level config, or choose a different harness.');
+    process.exit(1);
+  }
+
+  console.log(`Configuring ${harness.displayName}${projectMode ? ' (project-level)' : ''}...`);
+  configureHarness(harness, projectMode);
   console.log('Done.');
   process.exit(0);
 }
 
 // Default: interactive setup
-interactiveSetup();
+const projectMode = args.includes('--project');
+interactiveSetup(projectMode);
