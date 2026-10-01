@@ -34,14 +34,21 @@ bun install
 
 ### Setup
 
-The easiest way to configure for your AI harnesses:
+Run the setup command to configure the MCP server for your AI harnesses.
 
+**If you installed via npx:**
+```bash
+npx -y github:DonAyers/openrouter-optimizer setup
+```
+
+**If you installed globally via npm:**
 ```bash
 openrouter-optimizer setup
 ```
 
-Or if you cloned:
+**If you cloned the repo:**
 ```bash
+bun install
 bun run setup.ts
 ```
 
