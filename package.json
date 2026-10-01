@@ -1,16 +1,18 @@
 {
-  "name": "slaygent",
+  "name": "openrouter-optimizer",
   "version": "1.0.0",
-  "description": "OpenRouter router recommendation tool - an MCP server for optimal model routing",
+  "description": "OpenRouter router recommendation tool - MCP server for optimal model routing",
   "type": "module",
-  "private": true,
+  "main": "src/mcp-server.ts",
   "bin": {
-    "slaygent": "index.ts",
-    "slaygent-mcp": "src/mcp-server.ts"
+    "openrouter-optimizer": "index.ts",
+    "openrouter-optimizer-setup": "setup.ts",
+    "openrouter-optimizer-mcp": "src/mcp-server.ts"
   },
   "scripts": {
     "start": "bun run index.ts",
     "mcp": "bun run src/mcp-server.ts",
+    "setup": "bun run setup.ts",
     "test": "bun run index.ts --task \"Fix the bug in this React component\" --budget 0.001"
   },
   "dependencies": {
@@ -20,6 +22,15 @@
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^7"
-  }
-}
+  },
+  "files": [
+    "index.ts",
+    "src/",
+    "setup.ts",
+    "classifier.ts",
+    "model-cache.ts",
+    "output.ts",
+    "router-recommender.ts",
+    "types.ts"
+  ]
 }

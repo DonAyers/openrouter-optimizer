@@ -1,4 +1,4 @@
-# OpenRouter Router Tool
+# OpenRouter Optimizer
 
 An MCP server that recommends the optimal OpenRouter router for any task, with budget-aware configuration.
 
@@ -15,14 +15,32 @@ Analyzes your task and recommends:
 ### Install
 
 ```bash
-# Clone or copy this directory
-cd slaygent
+# Clone the repo
+git clone https://github.com/DonAyers/openrouter-optimizer
+cd openrouter-optimizer
 
 # Install dependencies
 bun install
 ```
 
-### Use as CLI
+### Setup (Recommended)
+
+The easiest way to configure for your AI harnesses:
+
+```bash
+# Interactive setup - detects your installed harnesses and configures them
+bun run setup.ts
+
+# Or with npx (no clone needed):
+npx -y github:DonAyers/openrouter-optimizer setup
+```
+
+The setup command will:
+1. Detect installed AI harnesses (Claude Code, OpenCode, Cursor, etc.)
+2. Ask which to configure (or configure all detected by default)
+3. Write the MCP config to the correct locations
+
+### Manual CLI Usage
 
 ```bash
 # Analyze a task
@@ -42,78 +60,23 @@ bun run index.ts --task "Fix the authentication bug" \\
 bun run index.ts --task "Research quantum computing" --json
 ```
 
-### Use as MCP Server (for Claude, Cursor, VS Code, etc.)
+### As MCP Server (for Claude, Cursor, VS Code, etc.)
 
-The tool is packaged as an MCP server. Add it to your MCP configuration:
+Once configured via `setup.ts`, the MCP server is available as a tool in your AI harness.
 
-**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+**Tool name:** `get_router_recommendation`
 
+**Input:**
 ```json
 {
-  "mcpServers": {
-    "openrouter-router": {
-      "command": "bun",
-      "args": ["run", "/absolute/path/to/slaygent/src/mcp-server.ts"]
-    }
-  }
+  "task": "Fix the bug in this React component",
+  "budget_per_request": 0.001,
+  "context_framework": "react",
+  "context_language": "typescript"
 }
 ```
 
-**VS Code / Cursor** (similar config):
-
-```json
-{
-  "mcpServers": {
-    "openrouter-router": {
-      "command": "bun",
-      "args": ["run", "${workspaceFolder}/slaygent/src/mcp-server.ts"]
-    }
-  }
-}
-```
-
-**Restart your MCP host** (Claude Desktop, Cursor, VS Code) after adding the config.
-
-### Available Tool
-
-Once configured, the MCP host will expose the `get_router_recommendation` tool:
-
-```json
-{
-  "name": "get_router_recommendation",
-  "description": "Recommend the optimal OpenRouter router for a given task",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "task": { "type": "string" },
-      "budget_per_request": { "type": "number" },
-      "max_tokens": { "type": "number" },
-      "session_id": { "type": "string" },
-      "context_files": { "type": "array", "items": { "type": "string" } },
-      "context_language": { "type": "string" },
-      "context_framework": { "type": "string" },
-      "context_project_type": { "type": "string" }
-    },
-    "required": ["task"]
-  }
-}
-```
-
-### Example Tool Call
-
-```json
-{
-  "name": "get_router_recommendation",
-  "arguments": {
-    "task": "Fix the bug in this React component",
-    "budget_per_request": 0.001,
-    "context_framework": "react",
-    "context_language": "typescript"
-  }
-}
-```
-
-**Returns:**
+**Output:**
 ```json
 {
   "task_type": "coding-agentic",
@@ -124,6 +87,16 @@ Once configured, the MCP host will expose the `get_router_recommendation` tool:
   "alternatives": [...]
 }
 ```
+
+## Supported Harnesses
+
+| Harness | Config Location |
+|---------|-----------------|
+| Claude Code | `~/.claude/settings.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
+| OpenCode | `~/.config/opencode/settings.json` |
+| Cursor | `~/.cursor/mcp.json` |
+| GitHub Copilot (VS Code) | `~/.config/Code/User/globalStorage/github.copilot/storage.json` |
 
 ## Routers Available
 
@@ -160,13 +133,17 @@ bun run src/mcp-server.ts
 
 # CLI mode
 bun run index.ts --task "your task here"
+
+# Setup mode
+bun run setup.ts
 ```
 
 ## Project Structure
 
 ```
-slaygent/
+openrouter-optimizer/
 ├── index.ts              # CLI entrypoint
+├── setup.ts              # Setup CLI for harness configuration
 ├── src/
 │   └── mcp-server.ts     # MCP server entrypoint
 ├── classifier.ts         # Task classification logic
@@ -193,6 +170,12 @@ Decisions are logged to `./decisions-log.jsonl`. In phase 2, this log can be ana
 - Track which router recommendations work best for which tasks
 - Adjust confidence scores based on outcomes
 - Build a performance database for optimization
+
+## Security
+
+- No API keys in code (uses `$OPENROUTER_API_KEY` env var placeholder)
+- Cache files excluded from git via `.gitignore`
+- Tool does not log or expose your API usage
 
 ## License
 
