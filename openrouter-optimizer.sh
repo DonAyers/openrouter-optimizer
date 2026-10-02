@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 # OpenRouter Optimizer - Bun wrapper
 # Faster installation using bun (no npm spinner)
 # Falls back to npx if bun is not available
@@ -35,7 +35,7 @@ ARGS=("$@")
 if [ ${#ARGS[@]} -eq 0 ]; then
   if [ "$BUN_AVAILABLE" = true ]; then
     echo "OpenRouter Optimizer (via bun)"
-    echo "════════════════════════════════════════"
+    echo "============================================="
     echo ""
     echo "Usage: $0 <command> [options]"
     echo ""
@@ -56,7 +56,7 @@ COMMAND="${ARGS[0]}"
 if [ "$COMMAND" = "setup" ]; then
   if [ "$BUN_AVAILABLE" = true ]; then
     echo "OpenRouter Optimizer (via bun)"
-    echo "════════════════════════════════════════"
+    echo "============================================="
     echo ""
     echo "Using bun - faster installation, no spinner."
     echo ""
@@ -80,7 +80,7 @@ if [ "$COMMAND" = "setup" ]; then
   else
     # Fall back to npx
     echo "OpenRouter Optimizer (via npx)"
-    echo "════════════════════════════════════════"
+    echo "============================================="
     echo ""
     echo "Bun not found, using npx (may show npm spinner during install)..."
     echo ""
@@ -92,7 +92,7 @@ elif [ "$COMMAND" = "--help" ] || [ "$COMMAND" = "-h" ]; then
   else
     echo "OpenRouter Optimizer (via npx)"
   fi
-  echo "════════════════════════════════════════"
+  echo "============================================="
   echo ""
   echo "Usage: $0 <command> [options]"
   echo ""
