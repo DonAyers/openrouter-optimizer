@@ -2,7 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
-import { classifyTask } from '../classifier';
+import { classifyTask, getTaskTypeDescription } from '../classifier';
 import { recommendRouter } from '../router-recommender';
 import { TaskContext } from '../types';
 import { getModels } from '../model-cache';
@@ -123,23 +123,6 @@ Returns a recommendation with:
     };
   }
 );
-
-// Helper: get task type description
-function getTaskTypeDescription(type: string): string {
-  const descriptions: Record<string, string> = {
-    coding: 'Writing, fixing, or modifying code',
-    'coding-agentic': 'Multi-step coding tasks requiring tool use or autonomous behavior',
-    research: 'Information gathering, analysis, and synthesis',
-    creative: 'Design, writing, or creative content generation',
-    'vision-analysis': 'Analyzing or extracting information from images',
-    'image-generation': 'Creating new images from text prompts',
-    'image-editing': 'Modifying or manipulating existing images',
-    summarization: 'Summarizing or condensing information',
-    general: 'General purpose tasks not fitting other categories',
-    unknown: 'Unable to classify',
-  };
-  return descriptions[type] || descriptions.general;
-}
 
 // Main: Run the MCP server
 async function main() {
