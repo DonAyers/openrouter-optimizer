@@ -35,6 +35,18 @@ bun run setup.ts
 ```
 Bun installs dependencies faster than npm and doesn't show a progress spinner.
 
+**Option 4: Bun wrapper script (best UX if you have bun)**
+```bash
+# Download and run the wrapper (one-liner)
+curl -sL https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.sh | bash
+
+# Or download it first, then run
+wget https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.sh
+chmod +x openrouter-optimizer.sh
+./openrouter-optimizer.sh setup
+```
+The wrapper detects if bun is available and uses it for faster installation. Falls back to npx if not.
+
 ### Setup
 1. Detect installed AI harnesses (Claude Code, OpenCode, Cursor, etc.)
 2. Ask which to configure (or configure all detected by default)
