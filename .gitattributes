@@ -1,0 +1,11 @@
+# Set default behavior for all files
+* text=auto eol=lf
+
+# Explicitly declare files that will always have LF line endings
+*.ts
+*.js
+*.json
+*.md
+*.yml
+*.yaml
+*.sh
