@@ -18,6 +18,7 @@ Analyzes your task and recommends:
 ```bash
 npx -y github:DonAyers/openrouter-optimizer setup
 ```
+Note: npx uses npm to install dependencies, which may show a progress spinner. The package has minimal dependencies (~2MB).
 
 **Option 2: npm install (global)**
 ```bash
@@ -25,51 +26,16 @@ npm install -g openrouter-optimizer
 openrouter-optimizer setup
 ```
 
-**Option 3: Clone (for development)**
+**Option 3: Clone with bun (fastest if you have bun)**
 ```bash
 git clone https://github.com/DonAyers/openrouter-optimizer
 cd openrouter-optimizer
 bun install
+bun run setup.ts
 ```
+Bun installs dependencies faster than npm and doesn't show a progress spinner.
 
 ### Setup
-
-Run the setup command to configure the MCP server for your AI harnesses.
-
-**If you installed via npx:**
-```bash
-npx -y github:DonAyers/openrouter-optimizer setup
-```
-
-**If you installed globally via npm:**
-```bash
-openrouter-optimizer setup
-```
-
-**If you cloned the repo:**
-```bash
-bun install
-bun run setup.ts
-```
-
-The setup command will:
-1. Detect installed AI harnesses (Claude Code, OpenCode, Cursor, etc.)
-2. Ask which to configure (or configure all detected by default)
-3. Write the MCP config to the correct locations
-
-### Setup (Recommended)
-
-The easiest way to configure for your AI harnesses:
-
-```bash
-# Interactive setup - detects your installed harnesses and configures them
-bun run setup.ts
-
-# Or with npx (no clone needed):
-npx -y github:DonAyers/openrouter-optimizer setup
-```
-
-The setup command will:
 1. Detect installed AI harnesses (Claude Code, OpenCode, Cursor, etc.)
 2. Ask which to configure (or configure all detected by default)
 3. Write the MCP config to the correct locations

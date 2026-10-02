@@ -202,8 +202,7 @@ async function interactiveSetup(projectMode = false): Promise<void> {
   console.log('OpenRouter Optimizer Setup');
   console.log('═'.repeat(50));
   console.log('');
-  console.log('This will configure the MCP server for your AI harnesses.');
-  console.log('The server recommends optimal OpenRouter routers for your tasks.');
+  console.log('Loading...');
   console.log('');
 
   detectAllHarnesses();
