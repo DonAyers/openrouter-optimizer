@@ -47,6 +47,26 @@ chmod +x openrouter-optimizer.sh
 ```
 The wrapper detects if bun is available and uses it for faster installation. Falls back to npx if not.
 
+**PowerShell users (Windows):**
+
+Download the PowerShell wrapper:
+```powershell
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.ps1 -OutFile openrouter-optimizer.ps1
+.\openrouter-optimizer.ps1 setup
+```
+
+Or use it directly:
+```powershell
+# One-liner
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.ps1 -OutFile $null -UseBasicParsing; powershell -File openrouter-optimizer.ps1 setup
+
+# Or if you have bun, just clone and use bun directly (fastest)
+git clone https://github.com/DonAyers/openrouter-optimizer
+cd openrouter-optimizer
+bun install
+bun run setup.ts
+```
+
 ### Setup
 1. Detect installed AI harnesses (Claude Code, OpenCode, Cursor, etc.)
 2. Ask which to configure (or configure all detected by default)
