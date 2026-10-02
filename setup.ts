@@ -20,8 +20,70 @@ import { homedir } from 'os';
 
 // --- Prompt Helpers ---
 
+// Shared stdin buffer for non-interactive mode
+let stdinQueue: string[] = [];
+let stdinBufferResolved = false;
+
 function prompt(question: string, defaultValue?: string): Promise<string> {
   return new Promise((resolve) => {
+    // Check if stdin is piped (non-interactive mode)
+    if (!process.stdin.isTTY) {
+      // Read all stdin at the start of the first prompt
+      if (!stdinBufferResolved) {
+        const chunks: Buffer[] = [];
+        let done = false;
+        
+        const onData = (data: Buffer) => {
+          if (done) return;
+          chunks.push(data);
+        };
+        
+        const onEnd = () => {
+          if (done) return;
+          done = true;
+          stdinBufferResolved = true;
+          const input = Buffer.concat(chunks).toString();
+          const lines = input.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          stdinQueue = lines;
+          // Resolve the current prompt with the first line or default
+          const answer = stdinQueue.shift() || defaultValue || '';
+          resolve(answer);
+        };
+        
+        process.stdin.on('data', onData);
+        process.stdin.on('end', onEnd);
+        
+        // Timeout in case stdin doesn't end
+        setTimeout(() => {
+          if (!done) {
+            done = true;
+            stdinBufferResolved = true;
+            const input = Buffer.concat(chunks).toString();
+            const lines = input.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            stdinQueue = lines;
+            const answer = stdinQueue.shift() || defaultValue || '';
+            resolve(answer);
+          }
+        }, 500);
+        
+        return;
+      }
+      
+      // If queue is already populated, get next line
+      if (stdinQueue.length > 0) {
+        const answer = stdinQueue.shift() || defaultValue || '';
+        resolve(answer);
+        return;
+      }
+      
+      // If queue is empty but buffer is resolved, use the default value (not the display string)
+      // The defaultValue is the actual value to use, not the display string
+      // For promptYN, the default is passed as the boolean, but prompt receives the display string
+      // So we need to handle this differently - resolve with empty string and let promptYN handle it
+      resolve('');
+      return;
+    }
+    
     process.stdout.write(`${question}${defaultValue ? ` [${defaultValue}]` : ''}: `);
     const buf = Buffer.alloc(1024);
     process.stdin.once('data', (data: Buffer) => {
@@ -32,10 +94,11 @@ function prompt(question: string, defaultValue?: string): Promise<string> {
 }
 
 function promptYN(question: string, defaultValue = true): Promise<boolean> {
-  return prompt(question, defaultValue ? 'Y/n' : 'y/N').then(answer => answer.toLowerCase() !== 'n');
+  return prompt(question, defaultValue ? 'Y/n' : 'y/N').then(answer => {
+    if (!answer) return defaultValue;
+    return answer.toLowerCase() !== 'n';
+  });
 }
-
-// --- Configuration ---
 
 interface HarnessConfig {
   name: string;

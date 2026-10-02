@@ -115,7 +115,8 @@ describe('OpenRouter Optimizer CLI', () => {
       // Pipe input: answer "n" for user-level, then "all" for harnesses
       const result = await runCLI(['setup'], 15000, resolve(__dirname, '..', 'index.ts'), 'n\nall\n');
       expect(result.stdout).toContain('OpenRouter Optimizer Setup');
-      expect(result.stdout).toContain('This will configure the MCP server');
+      expect(result.stdout).toContain('Loading...');
+      expect(result.stdout).toContain('User-level config for:');
       expect(result.exitCode).toBe(0);
     });
 
@@ -191,7 +192,8 @@ describe('OpenRouter Optimizer CLI', () => {
       // Pipe input: answer "n" for user-level, then "all" for harnesses
       const result = await runCLI(['setup'], 15000, resolve(__dirname, '..', 'index.ts'), 'n\nall\n');
       expect(result.stdout).toContain('OpenRouter Optimizer Setup');
-      expect(result.stdout).toContain('This will configure the MCP server');
+      expect(result.stdout).toContain('Loading...');
+      expect(result.stdout).toContain('User-level config for:');
       expect(result.exitCode).toBe(0);
     });
   });
