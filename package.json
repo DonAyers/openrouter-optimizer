@@ -32,6 +32,7 @@
     "output.ts",
     "router-recommender.ts",
     "types.ts",
-    "skills/"
+    "skills/",
+    "commands/"
   ]
 }
