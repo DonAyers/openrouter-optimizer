@@ -50,13 +50,12 @@ and deterministic. Leave no decision to the executing agent's discretion.
 After producing the spec, recommend which model/router should *execute* it,
 using live budget-aware routing when available:
 
-- If the `get_router_recommendation` tool is available (from the
-  `slaygent` MCP server), call it with the spec's task as `task`
-  plus a `budget_per_request` if the user gave one. Embed the returned
-  `recommended_router` and its `config` into the spec's execution section.
-- If that tool is unavailable, note in the spec that a routing recommendation
-  can be obtained by running the `slaygent` CLI
-  (`slaygent --task "..." --json`).
+- If a task-routing/model-selection capability is available, invoke it with the
+  spec's task as `task` plus a `budget_per_request` if the user gave one. Embed
+  the returned `recommended_router` and its `config` into the spec's execution
+  section.
+- If no such capability is available, skip this step and note in the spec that
+  a routing recommendation can be obtained separately.
 
 ## Gotchas
 

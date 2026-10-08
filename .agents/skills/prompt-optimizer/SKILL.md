@@ -51,11 +51,9 @@ requirements they did not state.
 
 ## Optional — recommend an execution model
 
-After the rewrite, if the `get_router_recommendation` tool is available (from
-the `slaygent` MCP server), call it with the optimized prompt's
-purpose as `task` and report the recommended router/model alongside the result.
-If unavailable, note the user can run
-`slaygent --task "..." --json` separately.
+After the rewrite, if a task-routing/model-selection capability is available,
+invoke it with the optimized prompt's purpose as `task` and report the
+recommended router/model alongside the result. If unavailable, skip this step.
 
 ## Gotchas
 
