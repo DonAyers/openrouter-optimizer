@@ -168,6 +168,8 @@ describe('Slaygent CLI', () => {
     test('--add claude configures Claude Code', async () => {
       const result = await runCLI(['setup.ts', '--add', 'claude'], 10000, setupPath);
       expect(result.stdout).toContain('Configuring Claude Code');
+      expect(result.stdout).toContain('Installed skills');
+      expect(result.stdout).toContain('Installed commands');
       expect(result.exitCode).toBe(0);
     });
 

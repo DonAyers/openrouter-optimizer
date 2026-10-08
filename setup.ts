@@ -14,7 +14,7 @@
  *   bun run setup.ts --noninteractive        # Non-interactive (default: user-level, all detected)
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
 
@@ -112,6 +112,8 @@ interface HarnessConfig {
   buildServerConfig?: (harness: HarnessConfig) => Record<string, unknown>;
   detected: boolean;
   supportsProjectLevel: boolean;
+  skillsPath?: string;
+  commandsPath?: string;
 }
 
 const MCP_SERVER_PATH = resolve(__dirname, 'src/mcp-server.ts');
@@ -146,6 +148,7 @@ const HARNESSES: HarnessConfig[] = [
     }),
     detected: false,
     supportsProjectLevel: true,
+    commandsPath: join(homedir(), '.config', 'opencode', 'commands'),
   },
   {
     name: 'claude',
@@ -162,6 +165,8 @@ const HARNESSES: HarnessConfig[] = [
     }),
     detected: false,
     supportsProjectLevel: true,
+    skillsPath: join(homedir(), '.claude', 'skills'),
+    commandsPath: join(homedir(), '.claude', 'commands'),
   },
   {
     name: 'claude-desktop',
@@ -218,6 +223,7 @@ const HARNESSES: HarnessConfig[] = [
     args: ['run', MCP_SERVER_PATH],
     detected: false,
     supportsProjectLevel: true,
+    skillsPath: join(homedir(), '.agents', 'skills'),
   },
 ];
 
@@ -351,6 +357,38 @@ function configureHarness(harness: HarnessConfig, projectMode = false): boolean 
   return true;
 }
 
+function copyDirRecursive(src: string, dest: string): void {
+  if (!existsSync(src)) return;
+  mkdirSync(dest, { recursive: true });
+  for (const entry of readdirSync(src, { withFileTypes: true })) {
+    const srcPath = join(src, entry.name);
+    const destPath = join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcPath, destPath);
+    } else {
+      copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+function installSkillsAndCommands(harness: HarnessConfig): void {
+  const sourceSkills = resolve(__dirname, 'skills');
+  const sourceCommands = resolve(__dirname, 'commands');
+
+  try {
+    if (harness.skillsPath) {
+      copyDirRecursive(sourceSkills, harness.skillsPath);
+      console.log(`  ✓ Installed skills to ${harness.skillsPath}`);
+    }
+    if (harness.commandsPath) {
+      copyDirRecursive(sourceCommands, harness.commandsPath);
+      console.log(`  ✓ Installed commands to ${harness.commandsPath}`);
+    }
+  } catch (e) {
+    console.log(`  ⚠ Could not install skills/commands: ${e}`);
+  }
+}
+
 // --- Interactive Setup ---
 
 async function interactiveSetup(projectMode = false): Promise<void> {
@@ -436,6 +474,15 @@ async function interactiveSetup(projectMode = false): Promise<void> {
     } catch (e) { console.log(`  Failed: ${harness.displayName}: ${e}`); failed++; }
   }
 
+  if (!finalProjectMode) {
+    console.log('');
+    console.log('Installing skills and commands...');
+    for (const name of toConfigure) {
+      const harness = HARNESSES.find(h => h.name === name);
+      if (harness) installSkillsAndCommands(harness);
+    }
+  }
+
   console.log('');
   console.log(`Done! ${success} configured, ${skipped} skipped, ${failed} failed.`);
   console.log('');
@@ -499,6 +546,7 @@ if (args.includes('--add')) {
 
   console.log(`Configuring ${harness.displayName}${projectMode ? ' (project-level)' : ''}...`);
   configureHarness(harness, projectMode);
+  if (!projectMode) installSkillsAndCommands(harness);
   console.log('Done.');
   process.exit(0);
 }
