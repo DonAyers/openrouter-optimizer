@@ -161,6 +161,7 @@ describe('OpenRouter Optimizer CLI', () => {
       const result = await runCLI(['setup.ts', '--list'], 10000, setupPath);
       expect(result.stdout).toContain('Supported harnesses:');
       expect(result.stdout).toContain('claude');
+      expect(result.stdout).toContain('zed');
       expect(result.exitCode).toBe(0);
     });
 
@@ -178,7 +179,7 @@ describe('OpenRouter Optimizer CLI', () => {
     });
 
     test('--add with unsupported project harness fails', async () => {
-      const result = await runCLI(['setup.ts', '--add', 'opencode', '--project'], 10000, setupPath);
+      const result = await runCLI(['setup.ts', '--add', 'claude-desktop', '--project'], 10000, setupPath);
       expect(result.stdout).toContain('Use without --project for user-level config');
       expect(result.exitCode).toBe(1);
     });

@@ -108,32 +108,58 @@ interface HarnessConfig {
   configKey: string;
   command: string;
   args: string[];
+  configFormat?: 'json' | 'codex-toml';
+  buildServerConfig?: (harness: HarnessConfig) => Record<string, unknown>;
   detected: boolean;
   supportsProjectLevel: boolean;
 }
 
 const MCP_SERVER_PATH = resolve(__dirname, 'src/mcp-server.ts');
 
+function getZedSettingsPath(): string {
+  if (process.platform === 'win32') {
+    // Zed uses %APPDATA%\\Zed\\settings.json on Windows.
+    return join(process.env.APPDATA || join(homedir(), 'AppData', 'Roaming'), 'Zed', 'settings.json');
+  }
+
+  if (process.platform === 'darwin') {
+    // Zed uses ~/.config/zed/settings.json on macOS.
+    return join(homedir(), '.config', 'zed', 'settings.json');
+  }
+
+  return join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), 'zed', 'settings.json');
+}
+
 const HARNESSES: HarnessConfig[] = [
   {
     name: 'opencode',
     displayName: 'OpenCode',
-    configPath: join(homedir(), '.config', 'opencode', 'settings.json'),
-    projectConfigPath: join(process.cwd(), '.opencode', 'settings.json'),
-    configKey: 'mcpServers',
+    configPath: join(homedir(), '.config', 'opencode', 'opencode.json'),
+    projectConfigPath: join(process.cwd(), 'opencode.json'),
+    configKey: 'mcp',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
+    buildServerConfig: harness => ({
+      type: 'local',
+      command: [harness.command, ...harness.args],
+      enabled: true,
+    }),
     detected: false,
-    supportsProjectLevel: false,
+    supportsProjectLevel: true,
   },
   {
     name: 'claude',
     displayName: 'Claude Code',
-    configPath: join(homedir(), '.claude', 'settings.json'),
-    projectConfigPath: join(process.cwd(), '.claude', 'settings.json'),
+    configPath: join(homedir(), '.claude.json'),
+    projectConfigPath: join(process.cwd(), '.mcp.json'),
     configKey: 'mcpServers',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
+    buildServerConfig: () => ({
+      type: 'stdio',
+      command: 'bun',
+      args: ['run', MCP_SERVER_PATH],
+    }),
     detected: false,
     supportsProjectLevel: true,
   },
@@ -150,12 +176,24 @@ const HARNESSES: HarnessConfig[] = [
   },
   {
     name: 'vscode-copilot',
-    displayName: 'GitHub Copilot (VS Code)',
-    configPath: join(homedir(), '.config', 'Code', 'User', 'globalStorage', 'github.copilot', 'storage.json'),
-    projectConfigPath: join(process.cwd(), '.vscode', 'settings.json'),
-    configKey: 'mcp',
+    displayName: 'GitHub Copilot',
+    configPath: join(homedir(), '.copilot', 'mcp-config.json'),
+    projectConfigPath: join(process.cwd(), '.mcp.json'),
+    configKey: 'mcpServers',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
+    detected: false,
+    supportsProjectLevel: true,
+  },
+  {
+    name: 'codex',
+    displayName: 'Codex',
+    configPath: join(homedir(), '.codex', 'config.toml'),
+    projectConfigPath: join(process.cwd(), '.codex', 'config.toml'),
+    configKey: 'mcp_servers',
+    command: 'bun',
+    args: ['run', MCP_SERVER_PATH],
+    configFormat: 'codex-toml',
     detected: false,
     supportsProjectLevel: true,
   },
@@ -165,6 +203,17 @@ const HARNESSES: HarnessConfig[] = [
     configPath: join(homedir(), '.cursor', 'mcp.json'),
     projectConfigPath: join(process.cwd(), '.cursor', 'mcp.json'),
     configKey: 'mcpServers',
+    command: 'bun',
+    args: ['run', MCP_SERVER_PATH],
+    detected: false,
+    supportsProjectLevel: true,
+  },
+  {
+    name: 'zed',
+    displayName: 'Zed',
+    configPath: getZedSettingsPath(),
+    projectConfigPath: join(process.cwd(), '.zed', 'settings.json'),
+    configKey: 'context_servers',
     command: 'bun',
     args: ['run', MCP_SERVER_PATH],
     detected: false,
@@ -182,7 +231,9 @@ function detectHarness(harness: HarnessConfig): boolean {
     claude: ['claude', 'claude-code'],
     'claude-desktop': [],
     'vscode-copilot': [],
+    codex: ['codex'],
     cursor: ['cursor'],
+    zed: ['zed'],
   };
 
   for (const cmd of cliChecks[harness.name] || []) {
@@ -221,20 +272,57 @@ function writeConfigFile(path: string, config: Record<string, unknown>): void {
   writeFileSync(path, JSON.stringify(config, null, 2) + '\n', 'utf-8');
 }
 
-function addMcpServer(config: Record<string, unknown>, harness: HarnessConfig): Record<string, unknown> {
-  const existing = config[harness.configKey] as Record<string, unknown> | undefined;
-  const serverConfig = {
+function writeRawConfigFile(path: string, content: string): void {
+  const dir = resolve(path, '..');
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+  writeFileSync(path, content, 'utf-8');
+}
+
+function buildServerConfig(harness: HarnessConfig): Record<string, unknown> {
+  return harness.buildServerConfig?.(harness) || {
     command: harness.command,
     args: harness.args,
   };
+}
+
+function addMcpServer(config: Record<string, unknown>, harness: HarnessConfig): Record<string, unknown> {
+  const existing = config[harness.configKey] as Record<string, unknown> | undefined;
+  const serverConfig = buildServerConfig(harness);
 
   if (!existing) {
     config[harness.configKey] = { 'openrouter-optimizer': serverConfig };
   } else {
-    (existing as Record<string, unknown>)['openrouter-optimizer'] = serverConfig;
+    existing['openrouter-optimizer'] = serverConfig;
     config[harness.configKey] = existing;
   }
   return config;
+}
+
+function tomlString(value: string): string {
+  return JSON.stringify(value);
+}
+
+function configureCodex(harness: HarnessConfig, configPath: string, projectMode: boolean): boolean {
+  const existingText = existsSync(configPath) ? readFileSync(configPath, 'utf-8') : '';
+  const serverHeader = '[mcp_servers.openrouter-optimizer]';
+
+  if (existingText.split(/\r?\n/).some(line => line.trim() === serverHeader)) {
+    console.log(`  Already configured for ${harness.displayName}${projectMode ? ' (project)' : ''}`);
+    return true;
+  }
+
+  const block = [
+    serverHeader,
+    `command = ${tomlString(harness.command)}`,
+    `args = ${JSON.stringify(harness.args)}`,
+    'enabled = true',
+  ].join('\\n');
+  const separator = existingText.length > 0 && !existingText.endsWith('\\n') ? '\\n' : '';
+  writeRawConfigFile(configPath, `${existingText}${separator}${block}\n`);
+  console.log(`  ✓ Configured for ${harness.displayName}${projectMode ? ' (project)' : ''}`);
+  return true;
 }
 
 function configureHarness(harness: HarnessConfig, projectMode = false): boolean {
@@ -243,6 +331,10 @@ function configureHarness(harness: HarnessConfig, projectMode = false): boolean 
   if (projectMode && !harness.supportsProjectLevel) {
     console.log(`  ✗ ${harness.displayName}: does not support project-level config`);
     return false;
+  }
+
+  if (harness.configFormat === 'codex-toml') {
+    return configureCodex(harness, configPath, projectMode);
   }
   
   const config = readConfigFile(configPath) || {};
@@ -300,7 +392,7 @@ async function interactiveSetup(projectMode = false): Promise<void> {
     }
     console.log('');
     console.log('To manually add, create the config file with:');
-    console.log(`  { "mcpServers": { "openrouter-optimizer": { "command": "bun", "args": ["run", "${MCP_SERVER_PATH}"] } } }`);
+    console.log(`  { "context_servers": { "openrouter-optimizer": { "command": "bun", "args": ["run", "${MCP_SERVER_PATH}"] } } }`);
     return;
   }
 

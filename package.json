@@ -33,6 +33,10 @@
     "router-recommender.ts",
     "types.ts",
     "skills/",
+    ".agents/skills/",
+    ".claude/skills/",
+    ".claude/commands/",
+    ".opencode/commands/",
     "commands/"
   ]
 }

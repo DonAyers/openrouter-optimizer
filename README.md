@@ -92,9 +92,9 @@ bun run index.ts --task "Fix the authentication bug" \\
 bun run index.ts --task "Research quantum computing" --json
 ```
 
-### As MCP Server (for Claude, Cursor, VS Code, etc.)
+### As MCP Server (for Zed, Claude Code, Codex, OpenCode, Copilot, Cursor, etc.)
 
-Once configured via `setup.ts`, the MCP server is available as a tool in your AI harness.
+Once configured via `setup.ts`, the MCP server is available as a tool in your AI harness. Each harness may expose MCP tools differently; for example, Zed uses the Agent Panel, Codex uses `/mcp`, Claude Code uses `/mcp`, and OpenCode exposes MCP tools alongside its built-in tools.
 
 **Tool name:** `get_router_recommendation`
 
@@ -122,13 +122,15 @@ Once configured via `setup.ts`, the MCP server is available as a tool in your AI
 
 ## Supported Harnesses
 
-| Harness | Config Location |
-|---------|-----------------|
-| Claude Code | `~/.claude/settings.json` |
-| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
-| OpenCode | `~/.config/opencode/settings.json` |
-| Cursor | `~/.cursor/mcp.json` |
-| GitHub Copilot (VS Code) | `~/.config/Code/User/globalStorage/github.copilot/storage.json` |
+| Harness | User config | Project config |
+|---------|-------------|----------------|
+| Claude Code | `~/.claude.json` | `.mcp.json` |
+| Codex | `~/.codex/config.toml` | `.codex/config.toml` |
+| OpenCode | `~/.config/opencode/opencode.json` | `opencode.json` |
+| GitHub Copilot | `~/.copilot/mcp-config.json` | `.mcp.json` |
+| Zed | `%APPDATA%\\Zed\\settings.json` (Windows) | `.zed/settings.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) | — |
+| Cursor | `~/.cursor/mcp.json` | `.cursor/mcp.json` |
 
 ## Routers Available
 
