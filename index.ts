@@ -2,16 +2,16 @@
 import { resolve } from 'path';
 import { getModels } from './model-cache';
 import { classifyTask, getTaskTypeDescription } from './classifier';
-import { recommendRouter, generateCurlExample } from './router-recommender';
+import { generateCurlExample } from './router-recommender';
+import { openrouterAdapter } from './openrouter-adapter';
 import { 
   formatRecommendation, 
   formatUsageGuide, 
   logDecision,
   generateDecisionId
 } from './output';
-import { 
+import type { 
   TaskClassification, 
-  RouterRecommendation, 
   RoutingRequest, 
   RoutingConstraints,
   DecisionLogEntry,
@@ -212,8 +212,8 @@ async function main(): Promise<void> {
     const request = buildRequest(args);
     const constraints = buildConstraints(args);
 
-    // Get recommendation
-    const recommendation = recommendRouter(classification, request, constraints);
+    // Get recommendation via the generic adapter
+    const target = openrouterAdapter.recommend(classification, request);
 
     // Format and output
     const format = {
@@ -222,7 +222,7 @@ async function main(): Promise<void> {
       quiet: args.quiet,
     };
 
-    const output = formatRecommendation(recommendation, classification, args.task, format);
+    const output = formatRecommendation(target, classification, args.task, format);
     
     if (args.json) {
       console.log(output);
@@ -239,11 +239,10 @@ async function main(): Promise<void> {
       confidence: classification.confidence,
       budget_constraint: args.budget ?? null,
       max_tokens: args.maxTokens ?? null,
-      chosen_router: recommendation.router,
-      chosen_model: recommendation.model,
-      chosen_config: recommendation.config || {},
-      estimated_cost_per_request: recommendation.estimatedCostPerRequest,
-      alternatives_considered: recommendation.alternatives.length,
+      chosen_model: target.model,
+      chosen_config: target.config,
+      estimated_cost_per_request: target.estCost,
+      alternatives_considered: target.alternatives.length,
       session_id: args.sessionId ?? undefined,
     };
 
@@ -256,7 +255,7 @@ async function main(): Promise<void> {
       console.log('  CURL EXAMPLE (ready to run):');
       console.log('─'.repeat(70));
       console.log('');
-      console.log(generateCurlExample(recommendation.router, recommendation.config || {}, args.task));
+      console.log(generateCurlExample(target.model, target.config, args.task));
       console.log('');
       console.log('─'.repeat(70));
       console.log('');

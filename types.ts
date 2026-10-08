@@ -118,11 +118,10 @@ export interface DecisionLogEntry {
   confidence: number;
   budget_constraint: number | null;
   max_tokens: number | null;
-  chosen_router: RouterType;
-  chosen_model?: string;
+  chosen_model: string;
   chosen_config: Record<string, unknown>;
   estimated_cost_per_request: number | null;
-  alternatives_considered: AlternativeRecommendation[];
+  alternatives_considered: number;
   session_id?: string;
 }
 
@@ -141,4 +140,35 @@ export interface RouterInfo {
   supportsBudgetConstraint: boolean;
   supportsModelConstraints: boolean;
   supportsSessionStickiness: boolean;
+}
+
+/**
+ * Generic execution target (provider-agnostic).
+ *
+ * The concrete OpenRouter knowledge (router names, `min_coding_score`, model
+ * pools) lives behind this contract so other providers can be siblings.
+ */
+export interface ExecutionTarget {
+  /** The model or routing strategy to execute with */
+  model: string;
+  /** Provider-specific configuration */
+  config: Record<string, unknown>;
+  /** Estimated cost per request in dollars */
+  estCost: number | null;
+  /** Estimated cost per million tokens in dollars */
+  estCostPerMillionTokens: number | null;
+  /** Human-readable reasoning for the choice */
+  reasoning: string;
+  /** Confidence in the recommendation (0-1) */
+  confidence: number;
+  /** Alternative targets with tradeoffs */
+  alternatives: ExecutionTarget[];
+}
+
+/**
+ * Provider-agnostic contract for recommending an execution target.
+ * Each provider (OpenRouter, Anthropic, etc.) implements this interface.
+ */
+export interface ExecutionTargetAdapter {
+  recommend(classification: TaskClassification, request: RoutingRequest): ExecutionTarget;
 }

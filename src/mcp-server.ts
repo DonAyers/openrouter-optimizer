@@ -3,8 +3,8 @@ import { McpServer } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
 import { classifyTask, getTaskTypeDescription } from '../classifier';
-import { recommendRouter } from '../router-recommender';
-import { TaskContext } from '../types';
+import { openrouterAdapter } from '../openrouter-adapter';
+import type { TaskContext } from '../types';
 import { getModels } from '../model-cache';
 
 // Initialize MCP server
@@ -92,8 +92,8 @@ Returns a recommendation with:
       context,
     };
 
-    // Get recommendation
-    const recommendation = recommendRouter(classification, request, {});
+    // Get recommendation via the generic adapter
+    const target = openrouterAdapter.recommend(classification, request);
 
     // Return structured result
     return {
@@ -106,17 +106,17 @@ Returns a recommendation with:
             task_description: getTaskTypeDescription(classification.type),
             confidence: classification.confidence,
             complexity: classification.complexity,
-            recommended_router: recommendation.router,
-            config: recommendation.config,
-            reasoning: recommendation.reasoning,
-            estimated_cost_per_million_tokens: recommendation.estimatedCostPerMillionTokens,
-            estimated_cost_per_request: recommendation.estimatedCostPerRequest,
-            alternatives: recommendation.alternatives.map((alt, i) => ({
+            model: target.model,
+            config: target.config,
+            reasoning: target.reasoning,
+            estimated_cost_per_million_tokens: target.estCostPerMillionTokens,
+            estimated_cost_per_request: target.estCost,
+            alternatives: target.alternatives.map((alt, i) => ({
               rank: i + 1,
-              router: alt.router,
+              model: alt.model,
               config: alt.config,
               reasoning: alt.reasoning,
-              estimated_cost_per_million_tokens: alt.estimatedCostPerMillionTokens,
+              estimated_cost_per_million_tokens: alt.estCostPerMillionTokens,
             })),
           }, null, 2),
         }],

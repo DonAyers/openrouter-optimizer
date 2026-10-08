@@ -474,7 +474,7 @@ export function getRouterInfo(router: RouterType): RouterInfo {
 }
 
 export function generateCurlExample(
-  router: RouterType,
+  router: string,
   config: Record<string, unknown>,
   task: string
 ): string {

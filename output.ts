@@ -1,10 +1,8 @@
-import { 
-  RouterRecommendation, 
+import type { 
+  ExecutionTarget, 
   TaskClassification, 
   DecisionLogEntry,
-  RouterInfo,
 } from './types';
-import { getRouterInfo } from './router-recommender';
 import { getTaskTypeDescription } from './classifier';
 
 function pad(str: string, len: number): string {
@@ -29,7 +27,7 @@ export interface OutputFormat {
 }
 
 export function formatRecommendation(
-  recommendation: RouterRecommendation,
+  target: ExecutionTarget,
   classification: TaskClassification,
   task: string,
   format: OutputFormat = { json: false, verbose: true, quiet: false }
@@ -50,21 +48,19 @@ export function formatRecommendation(
         tools: classification.requiresTools,
       },
       recommendation: {
-        router: recommendation.router,
-        router_info: getRouterInfo(recommendation.router),
-        model: recommendation.model,
-        config: recommendation.config,
-        reasoning: recommendation.reasoning,
-        estimated_cost_per_million_tokens: recommendation.estimatedCostPerMillionTokens,
-        estimated_cost_per_request: recommendation.estimatedCostPerRequest,
-        confidence: recommendation.confidence,
+        model: target.model,
+        config: target.config,
+        reasoning: target.reasoning,
+        estimated_cost_per_million_tokens: target.estCostPerMillionTokens,
+        estimated_cost_per_request: target.estCost,
+        confidence: target.confidence,
       },
-      alternatives: recommendation.alternatives.map((alt, i) => ({
+      alternatives: target.alternatives.map((alt, i) => ({
         rank: i + 1,
-        router: alt.router,
+        model: alt.model,
         config: alt.config,
         reasoning: alt.reasoning,
-        estimated_cost_per_million_tokens: alt.estimatedCostPerMillionTokens,
+        estimated_cost_per_million_tokens: alt.estCostPerMillionTokens,
       })),
       // For logging/learning
       log_entry: {
@@ -75,11 +71,10 @@ export function formatRecommendation(
         confidence: classification.confidence,
         budget_constraint: null, // Would be passed separately
         max_tokens: null, // Would be passed separately
-        chosen_router: recommendation.router,
-        chosen_model: recommendation.model,
-        chosen_config: recommendation.config,
-        estimated_cost_per_request: recommendation.estimatedCostPerRequest,
-        alternatives_considered: recommendation.alternatives.length,
+        chosen_model: target.model,
+        chosen_config: target.config,
+        estimated_cost_per_request: target.estCost,
+        alternatives_considered: target.alternatives.length,
       }
     }, null, 2);
   }
@@ -100,54 +95,46 @@ export function formatRecommendation(
   }
 
   // Main recommendation
-  const info = getRouterInfo(recommendation.router);
   lines.push('─'.repeat(70));
-  lines.push(`  RECOMMENDED ROUTER`);
+  lines.push(`  RECOMMENDED TARGET`);
   lines.push('─'.repeat(70));
   lines.push('');
-  lines.push(`  ${info.name} (${recommendation.router})`);
-  lines.push(`  ${info.description}`);
+  lines.push(`  ${target.model}`);
   lines.push('');
-  
-  if (recommendation.model) {
-    lines.push(`  Model: ${recommendation.model}`);
-    lines.push('');
-  }
 
-  if (recommendation.config && Object.keys(recommendation.config).length > 0) {
+  if (target.config && Object.keys(target.config).length > 0) {
     lines.push('  Config:');
-    for (const [key, value] of Object.entries(recommendation.config)) {
+    for (const [key, value] of Object.entries(target.config)) {
       lines.push(`    ${key}: ${JSON.stringify(value)}`);
     }
     lines.push('');
   }
 
-  lines.push(`  Reasoning: ${recommendation.reasoning}`);
+  lines.push(`  Reasoning: ${target.reasoning}`);
   lines.push('');
   
-  if (recommendation.estimatedCostPerMillionTokens !== null) {
+  if (target.estCostPerMillionTokens !== null) {
     lines.push(`  Estimated Cost:`);
-    lines.push(`    Per million tokens: ${formatCost(recommendation.estimatedCostPerMillionTokens)}`);
-    lines.push(`    Per request (est.): ${formatCost(recommendation.estimatedCostPerRequest, true)}`);
+    lines.push(`    Per million tokens: ${formatCost(target.estCostPerMillionTokens)}`);
+    lines.push(`    Per request (est.): ${formatCost(target.estCost, true)}`);
     lines.push('');
   }
 
   // Alternatives
-  if (format.verbose && recommendation.alternatives.length > 0) {
+  if (format.verbose && target.alternatives.length > 0) {
     lines.push('─'.repeat(70));
-    lines.push(`  ALTERNATIVES (${recommendation.alternatives.length})`);
+    lines.push(`  ALTERNATIVES (${target.alternatives.length})`);
     lines.push('─'.repeat(70));
     lines.push('');
 
-    for (let i = 0; i < recommendation.alternatives.length; i++) {
-      const alt = recommendation.alternatives[i];
-      const altInfo = getRouterInfo(alt.router);
+    for (let i = 0; i < target.alternatives.length; i++) {
+      const alt = target.alternatives[i];
       
-      lines.push(`  ${i + 1}. ${altInfo.name} (${alt.router})`);
+      lines.push(`  ${i + 1}. ${alt.model}`);
       lines.push(`     ${alt.reasoning}`);
       
-      if (alt.estimatedCostPerMillionTokens !== null) {
-        lines.push(`     Cost: ${formatCost(alt.estimatedCostPerMillionTokens)}/M tokens`);
+      if (alt.estCostPerMillionTokens !== null) {
+        lines.push(`     Cost: ${formatCost(alt.estCostPerMillionTokens)}/M tokens`);
       }
       
       if (alt.config && Object.keys(alt.config).length > 0) {
