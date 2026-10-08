@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * OpenRouter Optimizer - Setup CLI
+ * Slaygent - Setup CLI
  * 
  * Detects installed AI harnesses and configures MCP server integration.
  * 
@@ -292,9 +292,9 @@ function addMcpServer(config: Record<string, unknown>, harness: HarnessConfig): 
   const serverConfig = buildServerConfig(harness);
 
   if (!existing) {
-    config[harness.configKey] = { 'openrouter-optimizer': serverConfig };
+    config[harness.configKey] = { 'slaygent': serverConfig };
   } else {
-    existing['openrouter-optimizer'] = serverConfig;
+    existing['slaygent'] = serverConfig;
     config[harness.configKey] = existing;
   }
   return config;
@@ -306,7 +306,7 @@ function tomlString(value: string): string {
 
 function configureCodex(harness: HarnessConfig, configPath: string, projectMode: boolean): boolean {
   const existingText = existsSync(configPath) ? readFileSync(configPath, 'utf-8') : '';
-  const serverHeader = '[mcp_servers.openrouter-optimizer]';
+  const serverHeader = '[mcp_servers.slaygent]';
 
   if (existingText.split(/\r?\n/).some(line => line.trim() === serverHeader)) {
     console.log(`  Already configured for ${harness.displayName}${projectMode ? ' (project)' : ''}`);
@@ -340,7 +340,7 @@ function configureHarness(harness: HarnessConfig, projectMode = false): boolean 
   const config = readConfigFile(configPath) || {};
   const existing = config[harness.configKey] as Record<string, unknown> | undefined;
   
-  if (existing && (existing as Record<string, unknown>)['openrouter-optimizer']) {
+  if (existing && (existing as Record<string, unknown>)['slaygent']) {
     console.log(`  Already configured for ${harness.displayName}${projectMode ? ' (project)' : ''}`);
     return true;
   }
@@ -354,7 +354,7 @@ function configureHarness(harness: HarnessConfig, projectMode = false): boolean 
 // --- Interactive Setup ---
 
 async function interactiveSetup(projectMode = false): Promise<void> {
-  console.log('OpenRouter Optimizer Setup');
+  console.log('Slaygent Setup');
   console.log('═'.repeat(50));
   console.log('');
   console.log('Loading...');
@@ -392,7 +392,7 @@ async function interactiveSetup(projectMode = false): Promise<void> {
     }
     console.log('');
     console.log('To manually add, create the config file with:');
-    console.log(`  { "context_servers": { "openrouter-optimizer": { "command": "bun", "args": ["run", "${MCP_SERVER_PATH}"] } } }`);
+    console.log(`  { "context_servers": { "slaygent": { "command": "bun", "args": ["run", "${MCP_SERVER_PATH}"] } } }`);
     return;
   }
 
@@ -520,7 +520,7 @@ if (nonInteractive) {
 
 function printUsage(): void {
   console.log(`
-openrouter-optimizer setup - Configure MCP server for AI harnesses
+slaygent setup - Configure MCP server for AI harnesses
 
 USAGE:
   bun run setup.ts              Interactive setup (prompts for user/project + harnesses)

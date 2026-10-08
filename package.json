@@ -1,13 +1,13 @@
 {
-  "name": "openrouter-optimizer",
+  "name": "slaygent",
   "version": "1.0.0",
-  "description": "OpenRouter router recommendation tool - MCP server for optimal model routing",
+  "description": "Slaygent - OpenRouter router recommendation engine + portable prompt/agent skills",
   "type": "module",
   "main": "src/mcp-server.ts",
   "bin": {
-    "openrouter-optimizer": "index.ts",
-    "openrouter-optimizer-setup": "setup.ts",
-    "openrouter-optimizer-mcp": "src/mcp-server.ts"
+    "slaygent": "index.ts",
+    "slaygent-setup": "setup.ts",
+    "slaygent-mcp": "src/mcp-server.ts"
   },
   "scripts": {
     "start": "bun run index.ts",

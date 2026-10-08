@@ -9,7 +9,7 @@ import { getModels } from '../model-cache';
 
 // Initialize MCP server
 const server = new McpServer({
-  name: 'openrouter-router',
+  name: 'slaygent',
   version: '1.0.0',
 });
 
@@ -129,7 +129,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // Log to stderr, not stdout!
-  console.error('OpenRouter Router MCP Server running on stdio');
+  console.error('Slaygent MCP Server running on stdio');
 }
 
 main().catch((error) => {

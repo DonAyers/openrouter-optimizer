@@ -52,10 +52,10 @@ requirements they did not state.
 ## Optional — recommend an execution model
 
 After the rewrite, if the `get_router_recommendation` tool is available (from
-the `openrouter-optimizer` MCP server), call it with the optimized prompt's
+the `slaygent` MCP server), call it with the optimized prompt's
 purpose as `task` and report the recommended router/model alongside the result.
 If unavailable, note the user can run
-`openrouter-optimizer --task "..." --json` separately.
+`slaygent --task "..." --json` separately.
 
 ## Gotchas
 

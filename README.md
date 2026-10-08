@@ -1,8 +1,16 @@
-# OpenRouter Optimizer
+# Slaygent
 
-An MCP server that recommends the optimal OpenRouter router for any task, with budget-aware configuration.
+OpenRouter router recommendation engine + portable prompt/agent skills.
 
 ## What It Does
+
+Slaygent is a toolkit with three parts:
+
+1. **Router recommendation** — an MCP server + CLI that recommends the optimal OpenRouter router for any task, with budget-aware configuration.
+2. **Skills** — portable agent skills (`spec-architect`, `prompt-optimizer`).
+3. **Commands** — slash templates (`/op`, `/ope`).
+
+### Router recommendation
 
 Analyzes your task and recommends:
 - **Which router** to use (auto, jev, pareto, fusion, free, specific)
@@ -10,26 +18,40 @@ Analyzes your task and recommends:
 - **Budget-aware settings** based on your constraints
 - **Alternatives** with tradeoffs
 
+### Skills
+
+| Skill | What it does |
+|-------|--------------|
+| `spec-architect` | Turns a rough idea into a rigorous, deterministic agent spec |
+| `prompt-optimizer` | Scores and tightens an existing prompt |
+
+### Commands
+
+| Command | What it does |
+|---------|--------------|
+| `/op` | Optimize a prompt and execute the task |
+| `/ope` | Optimize a prompt and return the improved version |
+
 ## Quick Start
 
 ### Install (choose one)
 
 **Option 1: npx (no install, works immediately)**
 ```bash
-npx -y github:DonAyers/openrouter-optimizer setup
+npx -y github:DonAyers/slaygent setup
 ```
 Note: npx uses npm to install dependencies, which may show a progress spinner. The package has minimal dependencies (~2MB).
 
 **Option 2: npm install (global)**
 ```bash
-npm install -g openrouter-optimizer
-openrouter-optimizer setup
+npm install -g slaygent
+slaygent setup
 ```
 
 **Option 3: Clone with bun (fastest if you have bun)**
 ```bash
-git clone https://github.com/DonAyers/openrouter-optimizer
-cd openrouter-optimizer
+git clone https://github.com/DonAyers/slaygent
+cd slaygent
 bun install
 bun run setup.ts
 ```
@@ -38,12 +60,12 @@ Bun installs dependencies faster than npm and doesn't show a progress spinner.
 **Option 4: Bun wrapper script (best UX if you have bun)**
 ```bash
 # Download and run the wrapper (one-liner)
-curl -sL https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.sh | bash
+curl -sL https://raw.githubusercontent.com/DonAyers/slaygent/main/slaygent.sh | bash
 
 # Or download it first, then run
-wget https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.sh
-chmod +x openrouter-optimizer.sh
-./openrouter-optimizer.sh setup
+wget https://raw.githubusercontent.com/DonAyers/slaygent/main/slaygent.sh
+chmod +x slaygent.sh
+./slaygent.sh setup
 ```
 The wrapper detects if bun is available and uses it for faster installation. Falls back to npx if not.
 
@@ -51,18 +73,18 @@ The wrapper detects if bun is available and uses it for faster installation. Fal
 
 Download the PowerShell wrapper:
 ```powershell
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.ps1 -OutFile openrouter-optimizer.ps1
-.\openrouter-optimizer.ps1 setup
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/DonAyers/slaygent/main/slaygent.ps1 -OutFile slaygent.ps1
+.\slaygent.ps1 setup
 ```
 
 Or use it directly:
 ```powershell
 # One-liner
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/DonAyers/openrouter-optimizer/main/openrouter-optimizer.ps1 -OutFile $null -UseBasicParsing; powershell -File openrouter-optimizer.ps1 setup
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/DonAyers/slaygent/main/slaygent.ps1 -OutFile $null -UseBasicParsing; powershell -File slaygent.ps1 setup
 
 # Or if you have bun, just clone and use bun directly (fastest)
-git clone https://github.com/DonAyers/openrouter-optimizer
-cd openrouter-optimizer
+git clone https://github.com/DonAyers/slaygent
+cd slaygent
 bun install
 bun run setup.ts
 ```
@@ -85,7 +107,7 @@ bun run index.ts --task "Write a Python API" --budget 0.001
 bun run index.ts --task "Summarize this" --free-only
 
 # With context (helps when task is ambiguous)
-bun run index.ts --task "Fix the authentication bug" \\
+bun run index.ts --task "Fix the authentication bug" \
     --context-framework express --context-language typescript
 
 # Agent-ready JSON output
@@ -175,7 +197,7 @@ bun run setup.ts
 ## Project Structure
 
 ```
-openrouter-optimizer/
+slaygent/
 ├── index.ts              # CLI entrypoint
 ├── setup.ts              # Setup CLI for harness configuration
 ├── src/
@@ -185,6 +207,8 @@ openrouter-optimizer/
 ├── model-cache.ts        # OpenRouter model caching
 ├── output.ts             # Formatting (JSON + human)
 ├── types.ts              # TypeScript types
+├── skills/               # Portable agent skills
+├── commands/             # Slash command templates (/op, /ope)
 ├── package.json
 └── README.md
 ```

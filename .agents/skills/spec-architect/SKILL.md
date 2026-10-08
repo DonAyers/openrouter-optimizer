@@ -51,12 +51,12 @@ After producing the spec, recommend which model/router should *execute* it,
 using live budget-aware routing when available:
 
 - If the `get_router_recommendation` tool is available (from the
-  `openrouter-optimizer` MCP server), call it with the spec's task as `task`
+  `slaygent` MCP server), call it with the spec's task as `task`
   plus a `budget_per_request` if the user gave one. Embed the returned
   `recommended_router` and its `config` into the spec's execution section.
 - If that tool is unavailable, note in the spec that a routing recommendation
-  can be obtained by running the `openrouter-optimizer` CLI
-  (`openrouter-optimizer --task "..." --json`).
+  can be obtained by running the `slaygent` CLI
+  (`slaygent --task "..." --json`).
 
 ## Gotchas
 

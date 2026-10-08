@@ -31,7 +31,7 @@ function runCLI(args: string[], timeout = 30000, scriptPath = resolve(__dirname,
   });
 }
 
-describe('OpenRouter Optimizer CLI', () => {
+describe('Slaygent CLI', () => {
   describe('index.ts - CLI tool', () => {
     test('shows help when no args provided', async () => {
       const result = await runCLI([]);
@@ -114,7 +114,7 @@ describe('OpenRouter Optimizer CLI', () => {
     test('delegates to setup.ts when first arg is "setup"', async () => {
       // Pipe input: answer "n" for user-level, then "all" for harnesses
       const result = await runCLI(['setup'], 15000, resolve(__dirname, '..', 'index.ts'), 'n\nall\n');
-      expect(result.stdout).toContain('OpenRouter Optimizer Setup');
+      expect(result.stdout).toContain('Slaygent Setup');
       expect(result.stdout).toContain('Loading...');
       expect(result.stdout).toContain('User-level config for:');
       expect(result.exitCode).toBe(0);
@@ -123,7 +123,7 @@ describe('OpenRouter Optimizer CLI', () => {
     test('delegates to setup.ts with --project flag', async () => {
       // With --project, skips user/project prompt, just asks for harnesses
       const result = await runCLI(['setup', '--project'], 15000, resolve(__dirname, '..', 'index.ts'), 'all\n');
-      expect(result.stdout).toContain('OpenRouter Optimizer Setup');
+      expect(result.stdout).toContain('Slaygent Setup');
       expect(result.stdout).toContain('Configuring');
       expect(result.exitCode).toBe(0);
     });
@@ -146,7 +146,7 @@ describe('OpenRouter Optimizer CLI', () => {
 
     test('shows help with --help flag', async () => {
       const result = await runCLI(['setup.ts', '--help'], 10000, setupPath);
-      expect(result.stdout).toContain('openrouter-optimizer setup');
+      expect(result.stdout).toContain('slaygent setup');
       expect(result.exitCode).toBe(0);
     });
 
@@ -186,13 +186,13 @@ describe('OpenRouter Optimizer CLI', () => {
   });
 
   describe('npx flow simulation', () => {
-    // This tests that npx github:DonAyers/openrouter-optimizer setup works
+    // This tests that npx github:DonAyers/slaygent setup works
     test('npx setup command delegates correctly', async () => {
       // When npx runs the package, it runs the bin entry (index.ts)
       // If first arg is "setup", it should delegate to setup.ts
       // Pipe input: answer "n" for user-level, then "all" for harnesses
       const result = await runCLI(['setup'], 15000, resolve(__dirname, '..', 'index.ts'), 'n\nall\n');
-      expect(result.stdout).toContain('OpenRouter Optimizer Setup');
+      expect(result.stdout).toContain('Slaygent Setup');
       expect(result.stdout).toContain('Loading...');
       expect(result.stdout).toContain('User-level config for:');
       expect(result.exitCode).toBe(0);
