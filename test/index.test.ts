@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { spawn } from 'node:child_process';
 import { resolve } from 'path';
+import { classifyTask } from '../classifier';
+import { openrouterAdapter } from '../openrouter-adapter';
+import type { RoutingRequest } from '../types';
 
 // Helper to run CLI commands and capture output
 function runCLI(args: string[], timeout = 30000, scriptPath = resolve(__dirname, '..', 'index.ts'), stdinInput?: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
@@ -201,4 +204,37 @@ describe('Slaygent CLI', () => {
     });
   });
 
+});
+
+describe('openrouter-adapter', () => {
+  test('recommend returns a well-formed ExecutionTarget for a coding task', () => {
+    const classification = classifyTask('Fix the bug in this React component');
+    const request: RoutingRequest = { task: 'Fix the bug in this React component' };
+
+    const target = openrouterAdapter.recommend(classification, request);
+
+    expect(typeof target.model).toBe('string');
+    expect(target.model.length).toBeGreaterThan(0);
+    expect(typeof target.config).toBe('object');
+    expect(target.config).not.toBeNull();
+    expect(target.reasoning.length).toBeGreaterThan(0);
+    expect(typeof target.confidence).toBe('number');
+    expect(Array.isArray(target.alternatives)).toBe(true);
+    expect(target.estCost === null || typeof target.estCost === 'number').toBe(true);
+    expect(target.estCostPerMillionTokens === null || typeof target.estCostPerMillionTokens === 'number').toBe(true);
+  });
+
+  test('alternatives have the same ExecutionTarget shape', () => {
+    const classification = classifyTask('Fix the bug in this React component');
+    const request: RoutingRequest = { task: 'Fix the bug in this React component' };
+
+    const target = openrouterAdapter.recommend(classification, request);
+
+    for (const alt of target.alternatives) {
+      expect(typeof alt.model).toBe('string');
+      expect(alt.model.length).toBeGreaterThan(0);
+      expect(typeof alt.config).toBe('object');
+      expect(alt.reasoning.length).toBeGreaterThan(0);
+    }
+  });
 });
