@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## Continuity docs
+
+For substantial multi-session work, read `CURRENT.md` first, then `NEXT.md`, `ROADMAP.md`, `GOTCHAS.md`, and `NICE.md`. If asked to continue, follow that order and resume the in-flight item instead of re-deriving context.
+
 ## Runtime & commands
 
 This is a **Bun** project (not npm/Node). Use `bun` for everything — there is no build step (`tsconfig.json` has `noEmit: true`).
