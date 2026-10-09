@@ -1,4 +1,4 @@
-import { TaskClassification, TaskType } from './types';
+import type { TaskClassification, TaskType } from './types';
 
 interface ClassifierConfig {
   codingKeywords: string[];

@@ -47,7 +47,7 @@ export type TaskType =
   | 'image-generation'
   | 'image-editing'
   | 'general'
-  | ' summarization'
+  | 'summarization'
   | 'unknown';
 
 export interface RouterRecommendation {

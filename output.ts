@@ -128,7 +128,7 @@ export function formatRecommendation(
     lines.push('');
 
     for (let i = 0; i < target.alternatives.length; i++) {
-      const alt = target.alternatives[i];
+      const alt = target.alternatives[i]!;
       
       lines.push(`  ${i + 1}. ${alt.model}`);
       lines.push(`     ${alt.reasoning}`);
